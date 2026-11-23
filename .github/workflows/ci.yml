@@ -1,0 +1,175 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 4 * * *'
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.release.outputs.version }}
+      approval-required: ${{ steps.release.outputs.approval-required }}
+      bump-level: ${{ steps.release.outputs.bump-level }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: legra-ai/github-actions/.github/actions/prepare-cargo-release@674c637085eaba8f16e5413ad7f6420bd9964891
+        id: release
+        with:
+          breaking-change-bump: minor
+          token: ${{ github.token }}
+          plan-only: 'true'
+      - name: Show release proposal
+        env:
+          PROPOSED_VERSION: ${{ steps.release.outputs.version }}
+          BUMP_LEVEL: ${{ steps.release.outputs.bump-level }}
+          APPROVAL_REQUIRED: ${{ steps.release.outputs.approval-required }}
+          WORKFLOW_SOURCE: ${{ github.sha }}
+        run: |
+          python3 - <<'SUMMARY'
+          import os
+          level = os.environ['BUMP_LEVEL'] or 'none'
+          version = os.environ['PROPOSED_VERSION']
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as summary:
+              summary.write(f"Proposed version: {version} ({level})\n\n")
+              if os.environ['APPROVAL_REQUIRED'] == 'true':
+                  summary.write(f"This {level} release requires your explicit review in the "
+                                "release-approval environment. Use this exact approval comment:\n\n")
+                  summary.write(f"Approve {level} release {version} "
+                                f"from {os.environ['WORKFLOW_SOURCE']}\n")
+          SUMMARY
+
+  approve-release:
+    # Minor and major releases wait for the owner's review in the
+    # release-approval environment; preparation verifies the exact comment.
+    # The job always runs (patch plans select no environment), so no
+    # descendant job inherits a skipped ancestor.
+    name: Release approval (${{ needs.plan.outputs.bump-level || 'none' }} ${{ needs.plan.outputs.version }})
+    needs: plan
+    runs-on: ubuntu-latest
+    environment: ${{ needs.plan.outputs.approval-required == 'true' && 'release-approval' || '' }}
+    steps:
+      - name: Continue after any required environment review
+        run: python3 -c 'print("Preparation verifies the exact owner approval for minor and major releases.")'
+
+  prepare:
+    needs: [plan, approve-release]
+    runs-on: ubuntu-latest
+    outputs:
+      revision: ${{ steps.release.outputs.revision }}
+      version: ${{ steps.release.outputs.version }}
+      release: ${{ steps.release.outputs.release }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      # The authorized release writer: the organisation's GitHub App, minted
+      # only on main and scoped to this repository. PRs have no release secrets.
+      - uses: actions/create-github-app-token@v3
+        id: writer
+        if: github.ref == 'refs/heads/main'
+        with:
+          app-id: ${{ secrets.RELEASE_WRITER_APP_ID }}
+          private-key: ${{ secrets.RELEASE_WRITER_APP_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
+      - uses: legra-ai/github-actions/.github/actions/prepare-cargo-release@674c637085eaba8f16e5413ad7f6420bd9964891
+        id: release
+        with:
+          breaking-change-bump: minor
+          # Non-main preparation is read-only. A missing writer token on main
+          # must remain an error, so select the non-main token first.
+          token: ${{ github.ref != 'refs/heads/main' && github.token || steps.writer.outputs.token }}
+
+  test:
+    needs: prepare
+    if: always() && !cancelled() && needs.prepare.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.prepare.outputs.revision }}
+      - id: formatter
+        run: |
+          IFS= read -r formatter_toolchain < rustfmt-toolchain || exit 1
+          printf 'toolchain=%s\n' "$formatter_toolchain" >> "$GITHUB_OUTPUT"
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8
+        with:
+          toolchain: ${{ steps.formatter.outputs.toolchain }}
+          components: rustfmt
+      - uses: actions-rust-lang/setup-rust-toolchain@v2
+        with:
+          toolchain: 1.99.1
+          components: clippy
+          # Cargo 1.89 predates CARGO_BUILD_WARNINGS, which v2 uses by default.
+          rustflags: -D warnings
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          toolchain: nightly-2026-10-16
+          components: rustfmt
+      - run: ./scripts/fmt.sh --check
+      - run: cargo test --locked --all-targets
+      - run: cargo test --locked --doc
+      - run: python3 scripts/test-package.py
+      - run: python3 scripts/test-commit-policy.py
+      - run: python3 scripts/test_dependabot_policy.py
+      - run: cargo clippy --all-targets --all-features -- -D warnings
+      - run: cargo doc --no-deps --all-features
+
+  publish:
+    if: >-
+      always() && !cancelled() && needs.prepare.outputs.release == 'true' &&
+      needs.prepare.result == 'success' && needs.test.result == 'success'
+    needs: [prepare, test]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.prepare.outputs.revision }}
+      - uses: actions-rust-lang/setup-rust-toolchain@v2
+        with:
+          toolchain: 1.99.1
+          rustflags: -D warnings
+      - uses: legra-ai/github-actions/.github/actions/tag-tested-release@main
+        with:
+          version: ${{ needs.prepare.outputs.version }}
+          revision: ${{ needs.prepare.outputs.revision }}
+      - uses: legra-ai/github-actions/.github/actions/generate-changelog@main
+        with:
+          revision: ${{ needs.prepare.outputs.revision }}
+          output-file: CHANGELOG_RELEASE.md
+      - uses: softprops/action-gh-release@v3
+        with:
+          tag_name: v${{ needs.prepare.outputs.version }}
+          target_commitish: ${{ needs.prepare.outputs.revision }}
+          body_path: CHANGELOG_RELEASE.md
+          draft: true
+      - uses: legra-ai/github-actions/.github/actions/publish-tested-crate@main
+        with:
+          crate: store-facade-model
+          version: ${{ needs.prepare.outputs.version }}
+          revision: ${{ needs.prepare.outputs.revision }}
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
+      - name: Complete release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
+        run: gh release edit "v$RELEASE_VERSION" --draft=false

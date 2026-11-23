@@ -1,0 +1,84 @@
+# The store-facade vocabulary.
+#
+# A store description says of one Store IRI its slug, its language-tagged
+# labels and its capabilities. It never names the product, cluster, topology,
+# region or lifecycle behind the store.
+#
+# Each subject below starts a line; the census test relies on that layout.
+
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix ent:     <http://www.w3.org/ns/entailment/> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sd:      <http://www.w3.org/ns/sparql-service-description#> .
+@prefix sf:      <https://ns.legra.ai/store-facade#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+
+# Description terms
+
+sf:Store a rdfs:Class ;
+    rdfs:label "Store"@en ;
+    rdfs:comment "A logical query store, addressed only by its IRI."@en .
+
+sf:slug a rdf:Property ;
+    rdfs:label "slug"@en ;
+    rdfs:subPropertyOf dcterms:identifier ;
+    rdfs:domain sf:Store ;
+    rdfs:range xsd:string ;
+    rdfs:comment "A short handle: 1 to 63 bytes of a-z, 0-9 and '-', starting with a letter, without a trailing or doubled '-'."@en .
+
+# Language capabilities (sd:supportedLanguage)
+
+sd:SPARQL11Query a sd:Language ;
+    rdfs:label "SPARQL 1.1 Query"@en .
+
+sd:SPARQL11Update a sd:Language ;
+    rdfs:label "SPARQL 1.1 Update"@en .
+
+sf:SPARQL12Query a sd:Language ;
+    rdfs:label "SPARQL 1.2 Query"@en .
+
+sf:SPARQL12Update a sd:Language ;
+    rdfs:label "SPARQL 1.2 Update"@en .
+
+# Feature capabilities (sd:feature)
+
+sf:GraphStoreProtocol a sd:Feature ;
+    rdfs:label "Graph Store Protocol"@en ;
+    rdfs:comment "The SPARQL 1.1 Graph Store HTTP Protocol."@en .
+
+sf:RDF12Terms a sd:Feature ;
+    rdfs:label "RDF 1.2 terms"@en ;
+    rdfs:comment "Triple terms and directional language-tagged literals."@en .
+
+sf:ExactLiteralPreservation a sd:Feature ;
+    rdfs:label "exact literal preservation"@en ;
+    rdfs:comment "Literals return with their exact lexical form, never a canonical one."@en .
+
+sf:Transactions a sd:Feature ;
+    rdfs:label "transactions"@en ;
+    rdfs:comment "Atomic multi-operation transactions."@en .
+
+sf:NamedGraphs a sd:Feature ;
+    rdfs:label "named graphs"@en .
+
+sd:UnionDefaultGraph a sd:Feature ;
+    rdfs:label "union default graph"@en .
+
+sf:FullTextSearch a sd:Feature ;
+    rdfs:label "full-text search"@en .
+
+sf:GeoSPARQL a sd:Feature ;
+    rdfs:label "GeoSPARQL"@en .
+
+sf:PerQueryTimeout a sd:Feature ;
+    rdfs:label "per-query timeout"@en ;
+    rdfs:comment "A caller may bound the duration of each query."@en .
+
+# Entailment-regime capabilities (sd:entailmentRegime)
+
+ent:RDFS a sd:EntailmentRegime ;
+    rdfs:label "RDFS entailment"@en .
+
+ent:OWL-RDF-Based a sd:EntailmentRegime ;
+    rdfs:label "OWL 2 RDF-Based Semantics entailment"@en .
