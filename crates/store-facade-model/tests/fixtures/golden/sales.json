@@ -1,0 +1,32 @@
+{
+  "iri": "https://example.org/store/sales",
+  "slug": "sales",
+  "labels": [
+    {
+      "language": "en",
+      "text": "Sales ledger"
+    },
+    {
+      "language": "nl",
+      "text": "Verkoopgrootboek"
+    }
+  ],
+  "capabilities": [
+    {
+      "role": "language",
+      "iri": "http://www.w3.org/ns/sparql-service-description#SPARQL11Query"
+    },
+    {
+      "role": "language",
+      "iri": "https://ns.legra.ai/store-facade#SPARQL12Query"
+    },
+    {
+      "role": "feature",
+      "iri": "https://ns.legra.ai/store-facade#NamedGraphs"
+    },
+    {
+      "role": "entailment-regime",
+      "iri": "http://www.w3.org/ns/entailment/RDFS"
+    }
+  ]
+}

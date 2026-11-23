@@ -1,0 +1,8 @@
+<https://example.org/store/sales> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://ns.legra.ai/store-facade#Store> .
+<https://example.org/store/sales> <https://ns.legra.ai/store-facade#slug> "sales" .
+<https://example.org/store/sales> <http://www.w3.org/2000/01/rdf-schema#label> "Sales ledger"@en .
+<https://example.org/store/sales> <http://www.w3.org/2000/01/rdf-schema#label> "Verkoopgrootboek"@nl .
+<https://example.org/store/sales> <http://www.w3.org/ns/sparql-service-description#supportedLanguage> <http://www.w3.org/ns/sparql-service-description#SPARQL11Query> .
+<https://example.org/store/sales> <http://www.w3.org/ns/sparql-service-description#supportedLanguage> <https://ns.legra.ai/store-facade#SPARQL12Query> .
+<https://example.org/store/sales> <http://www.w3.org/ns/sparql-service-description#feature> <https://ns.legra.ai/store-facade#NamedGraphs> .
+<https://example.org/store/sales> <http://www.w3.org/ns/sparql-service-description#entailmentRegime> <http://www.w3.org/ns/entailment/RDFS> .
