@@ -47,8 +47,8 @@ wheels later.
   but adds a SKOS dependency for no gain once the model enforces one label
   per language itself.
 
-The proposed namespace is `https://ns.legra.ai/store-facade#` (prefix `sf`),
-pending owner confirmation. Its definition is vendored with the model crate.
+The namespace is `https://ns.legra.ai/store-facade#` (prefix `sf`),
+confirmed by the owner on 2026-11-23. Its definition is vendored with the model crate.
 
 ### Naming ruling
 

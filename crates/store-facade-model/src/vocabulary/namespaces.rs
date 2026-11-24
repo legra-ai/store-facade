@@ -1,4 +1,4 @@
-/// The store-facade namespace (proposed; awaiting owner confirmation).
+/// The store-facade namespace, `https://ns.legra.ai/store-facade#` (prefix `sf`).
 pub const SF: &str = "https://ns.legra.ai/store-facade#";
 /// W3C SPARQL 1.1 Service Description.
 pub const SD: &str = "http://www.w3.org/ns/sparql-service-description#";
