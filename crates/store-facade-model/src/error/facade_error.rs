@@ -3,6 +3,7 @@ use crate::{
     CapabilityRole,
     DescriptionLimit,
     ErrorCode,
+    ImplementationName,
     MissingCapabilities,
     SlugRejection,
     StoreIri,
@@ -93,6 +94,37 @@ pub enum FacadeError {
     /// The caller cancelled a query.
     #[error("the query was cancelled")]
     Cancelled,
+    /// A query text is not valid in its language.
+    #[error("invalid query: {message}")]
+    InvalidQuery {
+        /// A technology-neutral explanation.
+        message: String,
+    },
+    /// A query timeout is out of range.
+    #[error("invalid query timeout: {reason}")]
+    InvalidQueryTimeout {
+        /// Why the timeout was rejected.
+        reason: &'static str,
+    },
+    /// A query ran past its timeout.
+    #[error("the query exceeded its timeout")]
+    Timeout,
+    /// An implementation name is malformed.
+    #[error("invalid implementation name {name:?}: {reason}")]
+    InvalidImplementationName {
+        /// The rejected candidate.
+        name: String,
+        /// Why it was rejected.
+        reason: SlugRejection,
+    },
+    /// A binding names another implementation than the binder it was given.
+    #[error("the binding selects implementation {actual}, not {expected}")]
+    BindingMismatch {
+        /// The binder's implementation.
+        expected: Box<ImplementationName>,
+        /// The implementation the binding selects.
+        actual: Box<ImplementationName>,
+    },
     /// A backend failed; the message never names the technology behind it.
     #[error("the store failed: {message}")]
     Backend {
@@ -134,9 +166,20 @@ impl FacadeError {
     pub const CODE_CANCELLED: ErrorCode = ErrorCode::new("cancelled");
     /// Code of [`FacadeError::Backend`].
     pub const CODE_BACKEND: ErrorCode = ErrorCode::new("backend");
+    /// Code of [`FacadeError::InvalidQuery`].
+    pub const CODE_INVALID_QUERY: ErrorCode = ErrorCode::new("invalid-query");
+    /// Code of [`FacadeError::InvalidQueryTimeout`].
+    pub const CODE_INVALID_QUERY_TIMEOUT: ErrorCode = ErrorCode::new("invalid-query-timeout");
+    /// Code of [`FacadeError::Timeout`].
+    pub const CODE_TIMEOUT: ErrorCode = ErrorCode::new("timeout");
+    /// Code of [`FacadeError::InvalidImplementationName`].
+    pub const CODE_INVALID_IMPLEMENTATION_NAME: ErrorCode =
+        ErrorCode::new("invalid-implementation-name");
+    /// Code of [`FacadeError::BindingMismatch`].
+    pub const CODE_BINDING_MISMATCH: ErrorCode = ErrorCode::new("binding-mismatch");
 
     /// The complete catalogue, in declaration order.
-    pub const CODES: [ErrorCode; 16] = [
+    pub const CODES: [ErrorCode; 21] = [
         Self::CODE_INVALID_STORE_IRI,
         Self::CODE_INVALID_STORE_SLUG,
         Self::CODE_INVALID_CAPABILITY,
@@ -153,6 +196,11 @@ impl FacadeError {
         Self::CODE_INVALID_CACHE_KEY,
         Self::CODE_CANCELLED,
         Self::CODE_BACKEND,
+        Self::CODE_INVALID_QUERY,
+        Self::CODE_INVALID_QUERY_TIMEOUT,
+        Self::CODE_TIMEOUT,
+        Self::CODE_INVALID_IMPLEMENTATION_NAME,
+        Self::CODE_BINDING_MISMATCH,
     ];
 
     /// This error's stable code.
@@ -175,6 +223,19 @@ impl FacadeError {
             Self::InvalidCacheKey => Self::CODE_INVALID_CACHE_KEY,
             Self::Cancelled => Self::CODE_CANCELLED,
             Self::Backend { .. } => Self::CODE_BACKEND,
+            Self::InvalidQuery { .. } => Self::CODE_INVALID_QUERY,
+            Self::InvalidQueryTimeout { .. } => Self::CODE_INVALID_QUERY_TIMEOUT,
+            Self::Timeout => Self::CODE_TIMEOUT,
+            Self::InvalidImplementationName { .. } => Self::CODE_INVALID_IMPLEMENTATION_NAME,
+            Self::BindingMismatch { .. } => Self::CODE_BINDING_MISMATCH,
+        }
+    }
+
+    /// An invalid query with a technology-neutral message.
+    #[must_use]
+    pub fn invalid_query(message: impl Into<String>) -> Self {
+        Self::InvalidQuery {
+            message: message.into(),
         }
     }
 

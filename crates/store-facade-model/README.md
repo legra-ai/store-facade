@@ -18,7 +18,13 @@ for querying it.
 - [`RequiredCapabilities`] and [`CapabilitySet::require`] reject a store that
   lacks what a caller needs, naming every missing capability.
 - [`QueryStore`] is the async, streaming, cancellable query contract;
-  [`QueryRequest`] carries a [`QueryLanguage`], itself a capability.
+  [`QueryRequest`] carries a [`QueryLanguage`], itself a capability, and may
+  require further capabilities ([`QueryRequest::requiring`]) or carry a
+  [`QueryTimeout`], which requires `sf:PerQueryTimeout`.
+- [`StoreBinding`] is the operator side: it selects the
+  [`ImplementationName`] and configuration that serve a Store IRI. A
+  [`Binder`] opens the store and derives the caller-facing description, which
+  never names the implementation.
 - [`FacadeError`] has a stable code catalogue ([`FacadeError::CODES`]).
 - [`CacheKey`] and [`Validator`] are cache hooks for later slices.
 
