@@ -32,6 +32,11 @@ fn the_catalogue_is_pinned() {
             "invalid-cache-key",
             "cancelled",
             "backend",
+            "invalid-query",
+            "invalid-query-timeout",
+            "timeout",
+            "invalid-implementation-name",
+            "binding-mismatch",
         ]
     );
     let unique: BTreeSet<ErrorCode> = FacadeError::CODES.into_iter().collect();

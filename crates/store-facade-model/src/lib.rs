@@ -1,5 +1,6 @@
 #![doc = include_str!("../README.md")]
 
+mod binding;
 mod cache;
 mod capability;
 mod description;
@@ -8,6 +9,11 @@ mod identity;
 mod query;
 pub mod vocabulary;
 
+pub use binding::{
+    Binder,
+    ImplementationName,
+    StoreBinding,
+};
 pub use cache::{
     CacheKey,
     EntityTag,
@@ -44,4 +50,5 @@ pub use query::{
     QueryRequest,
     QueryStore,
     QueryText,
+    QueryTimeout,
 };

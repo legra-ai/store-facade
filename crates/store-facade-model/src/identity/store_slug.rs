@@ -37,7 +37,9 @@ impl StoreSlug {
         }
     }
 
-    fn rejection(slug: &str) -> Option<SlugRejection> {
+    /// The first slug rule `slug` violates; shared with
+    /// [`crate::ImplementationName`].
+    pub(crate) fn rejection(slug: &str) -> Option<SlugRejection> {
         let bytes = slug.as_bytes();
         let Some(first) = bytes.first() else {
             return Some(SlugRejection::Empty);

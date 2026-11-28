@@ -48,6 +48,12 @@ impl CapabilitySet {
         Ok(set)
     }
 
+    /// Collects capabilities a caller has already bounded below
+    /// [`DescriptionLimit::Capabilities`].
+    pub(crate) fn within_limit(capabilities: impl IntoIterator<Item = Capability>) -> Self {
+        Self(capabilities.into_iter().collect())
+    }
+
     /// Adds a capability; returns whether it was new.
     ///
     /// # Errors
