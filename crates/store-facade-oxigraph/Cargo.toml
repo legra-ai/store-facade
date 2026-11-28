@@ -1,0 +1,34 @@
+[package]
+name = "store-facade-oxigraph"
+description = "A store-facade binding that answers queries from an embedded Oxigraph store, in memory or on disk"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+readme = "README.md"
+keywords = ["rdf", "sparql", "store", "facade", "oxigraph"]
+categories = ["database"]
+# Not published yet: the shared release pipeline publishes one crate per
+# repository. See the repository README.
+publish = false
+
+[dependencies]
+futures-core.workspace = true
+oxigraph.workspace = true
+serde.workspace = true
+store-facade-model.workspace = true
+tokio = { workspace = true, features = ["rt", "sync", "time"] }
+tokio-util.workspace = true
+
+[dev-dependencies]
+futures-util.workspace = true
+rdf-structural-model.workspace = true
+serde_json.workspace = true
+store-facade-contract.workspace = true
+tempfile.workspace = true
+tokio = { workspace = true, features = ["macros", "rt-multi-thread", "sync", "time"] }
+
+[lints]
+workspace = true

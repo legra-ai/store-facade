@@ -24,6 +24,8 @@ by `.githooks/commit-msg` and on PR titles by CI:
 | Scope | Covers |
 | ----- | ------ |
 | `model` | the `store-facade-model` crate |
+| `oxigraph` | the `store-facade-oxigraph` binding |
+| `contract` | the `store-facade-contract` capability suite |
 | `vocabulary` | capability constants and the vendored Turtle vocabulary |
 | `repo` | repository layout, licenses, README, agent instructions |
 | `docs` | decision records and other documentation |

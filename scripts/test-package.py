@@ -10,6 +10,9 @@ import tomllib
 def check_member(root, member, version, target):
     manifest = tomllib.loads((root / member / "Cargo.toml").read_text())
     name = manifest["package"]["name"]
+    if manifest["package"].get("publish", True) is False:
+        print(f"{name}: publish = false, not packaged")
+        return
     stem = f"{name}-{version}"
     tests = subprocess.check_output(
         ["git", "ls-files", "tests/"], cwd=root / member, text=True

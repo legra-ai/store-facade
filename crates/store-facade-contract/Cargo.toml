@@ -1,0 +1,21 @@
+[package]
+name = "store-facade-contract"
+description = "The capability contract suite every store-facade binding runs against its own stores"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+readme = "README.md"
+# A development crate: bindings use it from their tests only.
+publish = false
+
+[dependencies]
+futures-util.workspace = true
+store-facade-model.workspace = true
+tokio = { workspace = true, features = ["sync"] }
+tokio-util.workspace = true
+
+[lints]
+workspace = true
